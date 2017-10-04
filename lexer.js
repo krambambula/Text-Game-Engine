@@ -8,7 +8,8 @@ var commands = {
     "pause": false,
     "use": true,
     "take": true,
-    "rps": true
+    "rps": true,
+    "talk": true
 };
 
 var commands2 = [];

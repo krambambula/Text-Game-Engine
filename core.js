@@ -19,7 +19,7 @@ monster: {
 
 //world is a two dimensional array
 
-function Player(name, world) {
+function Player({name, world}) {
     
     //stats
     this.health = 100;
@@ -93,7 +93,7 @@ function Player(name, world) {
     }
 }
 
-function Npc(name, health, attacks, takeable=function() { return true }, ontake, ondrop) {
+function Npc({name, health, attacks, takeable=function() { return false }, ontake, ondrop, talk}) {
     
     //stats
     var self = this;
@@ -122,14 +122,19 @@ function Npc(name, health, attacks, takeable=function() { return true }, ontake,
         }
     }
     this.ondrop = ondrop;
-    
+    if (!talk) {
+        var talk = function(p) {
+            output("Hi, " + p.name);
+        }
+    }
+    this.talk = talk;
 }
 
-function Item(name, types, action, desc, attacks, takeable=function() {return true}, ontake, ondrop, max) {
+function Item({name, types = [], action = function(){}, desc = "", attacks, takeable=function() {return true}, ontake, ondrop, max=10}) {
     
     var self = this;
     this.num = 1;
-    this.max = 10;
+    this.max = max;
     this.name = name;
     this.types = types;
     this.action = action;
@@ -151,7 +156,7 @@ function Item(name, types, action, desc, attacks, takeable=function() {return tr
     
 }
 
-function Location(name, environment, desc, onenter, onleave) {
+function Location({name = "", environment, desc, onenter, onleave}) {
     var self = this;
     this.name = name;
     this.environment = environment || {};
@@ -163,9 +168,9 @@ function Location(name, environment, desc, onenter, onleave) {
 function fight(one, two) {
     while( !(one.health <= 0) && !(two.health <= 0) ) {
         one.attack(two); console.log("Two health: " + two.health);
-        if (two.health <= 0) break;
+        if (two.health <= 0) { break; }
         two.attack(one); console.log("One health: " + one.health);
-        if (one.health <= 0) break;
+        if (one.health <= 0) { break; }
     }
     return one.health > two.health;
 }

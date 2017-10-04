@@ -1,16 +1,39 @@
-var forest = new Location("forest");
+var forest = new Location({name: "forest"});
 
-var house = new Location("house");
+var house = new Location({name: "house"});
 
-var pond = new Location("pond", {
-    zombie: new Npc("zombie", 100, [[function(enem) { enem.health -= 10 }, "ZOMBIE PUNCHES ATTACKS -10!!!!"]])
+var pond = new Location({
+    name: "pond", 
+    environment: {
+    zombie: new Npc({
+        name: "zombie",
+        health: 100,
+        attacks: [[function(enem) { enem.health -= 10}, "ZOMBIE ATTACKS: -10 HEALTH"]],
+        talk: function() {
+            output("BWAAAAIINNSS");
+        }
+    })
+    }
 });
 
-var well = new Location("well", {
-        punch: new Item("punch", ["weapon"],function() { output("You punch nothing") }, "Your fist", [[function(enem) {enem.health -= 10}, "You POUND that FIST!"]])
-});  
+var well = new Location({
+    name: "well", 
+    environment: {
+        punch: new Item({
+            name: "punch",
+            types: ["weapon"],
+            action: function(p) { output(p.name + " punches thin air") },
+            attacks: [[function(enem) { enem.health -= 10}, "Enemy gets POUNDED"]],
+            desc: "A fist"
+        })
+}});  
 
 var world = [
     [forest, house],
     [pond, well],
 ];
+
+var p = new Player({
+    name: "Udbhav",
+    world: world
+});
