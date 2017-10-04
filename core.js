@@ -10,7 +10,7 @@ environment = {
 sword: {
     ---
     
-}
+},
 monster: {
 
 }
@@ -18,7 +18,6 @@ monster: {
 ################################*/
 
 //world is a two dimensional array
-var world = [[]];
 
 function Player(name, world) {
     
@@ -29,6 +28,7 @@ function Player(name, world) {
     this.inventory = {};
     this.x = 0;
     this.y = 0;
+    this.environment = world[this.y][this.x].environment;
     world[this.y][this.x].environment[this.name] = this;
     var self = this;
     //Get the attack
@@ -58,14 +58,17 @@ function Player(name, world) {
     //for use in fight function
     this.attack = function(enem) {
         var att = self.getAttack();
-        att(enem);
+        att[0](enem);
+        output(att[1]);
     }
     this.setX = function(val) {
         try {
+        output(world[self.y][self.x].onleave(self));
         delete self.environment[self.name];
         self.x = val;
         self.environment = world[self.y][self.x].environment;
         self.environment[self.name] = self;
+        output(world[self.y][self.x].onenter(self));
         }
         catch(e) {
             output("Cannot go any further in this direction!");
@@ -73,23 +76,24 @@ function Player(name, world) {
     };
     this.setY = function(val) {
         try {
+        output(world[self.y][self.x].onleave(self));
         delete self.environment[self.name];
         self.y = val;
         self.environment = world[self.y][self.x].environment;
         self.environment[self.name] = self;
+        output(world[self.y][self.x].onenter(self));
         }
         catch(e) {
             output("Cannot go any further in this direction!");
             console.log(e);
         }
     }
-    this.environment = world[this.x][this.y].environment;
     this.getRPS = function() {
         return input("Enter 1 for stone, 2 for paper, and 3 for scissors!");
     }
 }
 
-function Npc(name, health, attacks, takeable=false, ontake) {
+function Npc(name, health, attacks, takeable=function() { return true }, ontake, ondrop) {
     
     //stats
     var self = this;
@@ -112,25 +116,48 @@ function Npc(name, health, attacks, takeable=false, ontake) {
     this.ontake = function(player) {
         
     }
+    if (!ondrop) {
+        var ondrop = function(p) {
+            return (p.name + " leaves behind " + self.name);
+        }
+    }
+    this.ondrop = ondrop;
     
 }
 
-function Item(name, types, action, desc, attacks, takeable=true, ontake) {
+function Item(name, types, action, desc, attacks, takeable=function() {return true}, ontake, ondrop, max) {
     
     var self = this;
+    this.num = 1;
+    this.max = 10;
     this.name = name;
     this.types = types;
     this.action = action;
     this.desc = desc;
     this.attacks = attacks;
     this.getAttack = function() {
-        return attacks[Math.round(Math.random()*attacks.length)];
+        return attacks[Math.floor(Math.random()*attacks.length)];
     }
     this.takeable = takeable;
-    this.ontake = function(player) {
-        
+    this.ontake = ontake || function(player) {
+        return (player.name + " takes " + self.name);
     }
+    if (!ondrop) {
+        var ondrop = function(p) {
+            return (p.name + " drops " + self.name);
+        }
+    }
+    this.ondrop = ondrop;
     
+}
+
+function Location(name, environment, desc, onenter, onleave) {
+    var self = this;
+    this.name = name;
+    this.environment = environment || {};
+    this.desc = desc || this.name;
+    this.onenter = onenter || function(p) { return p.name + " enters " + self.name};
+    this.onleave = onleave || function(p) { return p.name + " leaves " + self.name};
 }
 
 function fight(one, two) {
@@ -159,20 +186,32 @@ function use(p, str) {
 }
 
 function take(p, str) {
-    if (p.environment[str].takeable) {
-        p.inventory[str] = p.environment[str];
-        p.inventory[str].ontake(p);
-        delete p.environment[str];
+    if (p.environment[str].takeable()) {
+        if(p.inventory[str] && p.inventory[str].num < p.inventory[str].max) {
+            p.inventory[str].num += 1;
+            output(p.inventory[str].ontake(p));
+            delete p.environment[str];
+        }
+        else {
+            p.inventory[str] = p.environment[str];
+            output(p.inventory[str].ontake(p));
+            delete p.environment[str];
+        }
     }
     else {
-        output("You cannot perform this action");
+        output("You are unable to do this");
     }
 }
 
 function drop(p, str) {
     if (p.inventory[str]) {
         p.environment[str] = p.inventory[str];
-        delete p.inventory[str];
+        var string = p.inventory[str].ondrop(p);
+        output(string);
+        if (p.inventory[str].num == 1) delete p.inventory[str];
+        else {
+            p.inventory[str].num -= 1;
+        }
     }
 }
 

@@ -46,7 +46,7 @@ function parse(arr) {
         if(commands[arr[0]]) {
             return {
                 command: arr[0],
-                complex: true,
+                complex: false,
                 target: arr[1]
             }
         }
@@ -58,7 +58,10 @@ function parse(arr) {
         }
     }
     else {
-        
+        return {
+            command: arr,
+            complex: true
+        }
     }
     
 }
